@@ -5,7 +5,7 @@ import {
 } from "@supabase/ssr";
 import { Request, Response } from "express";
 
-export function createClient(context: { req: Request, res: Response}) {
+export function createClient(context: { req: Request; res: Response }) {
   return createServerClient(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_ANON_KEY!,
@@ -23,6 +23,9 @@ export function createClient(context: { req: Request, res: Response}) {
             ),
           );
         },
+      },
+      cookieOptions: {
+        name: "sb-auth",
       },
     },
   );

@@ -44,8 +44,8 @@ interface UpdatePlaceBody {
 export async function updatePlace(req: Request, res: Response) {
   const newPlace: UpdatePlaceBody = {};
   if (req.body.lat) newPlace.lat = req.body.lat;
-  if (req.body.lng) newPlace.lat = req.body.lng;
-  if (req.body.price) newPlace.lat = req.body.price;
+  if (req.body.lng) newPlace.lng = req.body.lng;
+  if (req.body.price) newPlace.price = req.body.price;
 
   const { id } = req.params;
 

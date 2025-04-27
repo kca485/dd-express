@@ -30,15 +30,47 @@ export async function confirmMagicLink(req: Request, res: Response) {
     }
 
     const supabase = createClient({ req, res });
-    const { data, error } = await supabase.auth.verifyOtp({
+    const { data: _, error } = await supabase.auth.verifyOtp({
       token_hash: tokenHash,
       type: "email",
     });
-    if (error) throw error;
+    if (error) {
+      console.log(error);
+      throw error;
+    }
 
-    res.json({ message: "Logged in successfully", data });
+    res.redirect("http://localhost:3000");
   } catch (error) {
     console.error("Error verifying magic link:", error);
     res.status(400).json({ error: (error as { message?: string })?.message });
+  }
+}
+
+export async function getUser(req: Request, res: Response) {
+  const supabase = createClient({ req, res });
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error) {
+    res.status(400).json({ error: (error as { message?: string })?.message });
+  } else {
+    res.json({
+      user: data.user,
+    });
+  }
+}
+
+export async function getSession(req: Request, res: Response) {
+  const supabase = createClient({ req, res });
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
+
+  if (error || !session?.user) {
+    res.status(400).json({ error: (error as { message?: string })?.message });
+  } else {
+    res.json({
+      user: { id: session.user.id, email: session.user.email },
+    });
   }
 }
