@@ -39,7 +39,14 @@ export async function confirmMagicLink(req: Request, res: Response) {
       throw error;
     }
 
-    res.redirect("http://localhost:3000");
+    const clientUrl = process.env.CLIENT_URL;
+    if (!clientUrl) {
+      res.status(500).json({
+        message: "no redirect url set",
+      });
+    } else {
+      res.redirect(clientUrl);
+    }
   } catch (error) {
     console.error("Error verifying magic link:", error);
     res.status(400).json({ error: (error as { message?: string })?.message });
