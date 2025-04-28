@@ -16,16 +16,20 @@ export function createClient(context: { req: Request; res: Response }) {
           return parseCookieHeader(context.req.headers.cookie ?? "");
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            context.res.appendHeader(
-              "Set-Cookie",
-              serializeCookieHeader(name, value, options),
-            ),
-          );
+          cookiesToSet.forEach(({ name, value, options }) => {
+            const serialized = serializeCookieHeader(name, value, {
+              ...options,
+              sameSite: "none",
+              secure: true,
+            });
+            context.res.append("Set-Cookie", serialized);
+          });
         },
       },
       cookieOptions: {
         name: "sb-auth",
+        sameSite: "none",
+        secure: true,
       },
     },
   );

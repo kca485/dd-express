@@ -11,7 +11,7 @@ export async function sendMagicLink(req: Request, res: Response) {
     const { data, error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${process.env.BASE_URL}/auth/confirm`,
+        emailRedirectTo: `${process.env.CLIENT_URL}/api/auth/confirm`,
       },
     });
     if (error) throw error;
@@ -30,10 +30,11 @@ export async function confirmMagicLink(req: Request, res: Response) {
     }
 
     const supabase = createClient({ req, res });
-    const { data: _, error } = await supabase.auth.verifyOtp({
+    const { data, error } = await supabase.auth.verifyOtp({
       token_hash: tokenHash,
       type: "email",
     });
+    console.log("verifyOtpData:", data, "And error:", error);
     if (error) {
       console.log(error);
       throw error;
@@ -45,6 +46,7 @@ export async function confirmMagicLink(req: Request, res: Response) {
         message: "no redirect url set",
       });
     } else {
+      console.log("response headers before redirect:", res.getHeaders());
       res.redirect(clientUrl);
     }
   } catch (error) {
@@ -72,7 +74,10 @@ export async function getSession(req: Request, res: Response) {
     data: { session },
     error,
   } = await supabase.auth.getSession();
+  console.log("cookies", req.headers.cookie);
+  console.log("sb-auth", req.cookies["sb-auth"]);
 
+  console.log("session", session);
   if (error || !session?.user) {
     res.status(400).json({ error: (error as { message?: string })?.message });
   } else {
