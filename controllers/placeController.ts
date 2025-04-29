@@ -17,12 +17,36 @@ export async function getAllPlaces(req: Request, res: Response) {
 }
 
 export async function createPlace(req: Request, res: Response) {
-  const newPlace = req.body;
   const supabase = createClient({ req, res });
+
+  const picture = req.file;
+  let picturePath = "";
+  if (picture) {
+    const ext = picture?.originalname.split(".").pop();
+
+    const filename = `${String(Date.now())}.${ext}`;
+    const bucketPath = `pictures/${filename}`;
+    const { error } = await supabase.storage
+      .from("dd")
+      .upload(bucketPath, picture.buffer, {
+        contentType: picture.mimetype,
+      });
+    picturePath = supabase.storage.from("dd").getPublicUrl(bucketPath)
+      .data.publicUrl;
+
+    if (error) {
+      console.error(error);
+      res.status(500).json({ error: error.message });
+      return;
+    }
+  }
+
+  const newPlace = req.body;
   const { data, error } = await supabase.from("dd_places").insert({
-    lat: newPlace.lat,
-    lng: newPlace.lng,
-    price: newPlace.price,
+    lat: parseFloat(newPlace.lat),
+    lng: parseFloat(newPlace.lng),
+    price: parseFloat(newPlace.price),
+    picture_path: picturePath,
   });
 
   if (error) {
@@ -40,24 +64,46 @@ interface UpdatePlaceBody {
   lat?: number;
   lng?: number;
   price?: number;
+  picture_path?: string;
 }
 export async function updatePlace(req: Request, res: Response) {
-  const newPlace: UpdatePlaceBody = {};
-  if (req.body.lat) newPlace.lat = req.body.lat;
-  if (req.body.lng) newPlace.lng = req.body.lng;
-  if (req.body.price) newPlace.price = req.body.price;
-
+  const supabase = createClient({ req, res });
   const { id } = req.params;
 
-  const supabase = createClient({ req, res });
+  const picture = req.file;
+  let picturePath = "";
+  if (picture) {
+    const ext = picture?.originalname.split(".").pop();
+
+    const filename = `${id}-${String(Date.now())}.${ext}`;
+    const bucketPath = `pictures/${filename}`;
+    const { error } = await supabase.storage
+      .from("dd")
+      .upload(bucketPath, picture.buffer, {
+        contentType: picture.mimetype,
+      });
+    picturePath = supabase.storage.from("dd").getPublicUrl(bucketPath)
+      .data.publicUrl;
+
+    if (error) {
+      console.error("upload picture error", error);
+      res.status(500).json({ error: error.message });
+      return;
+    }
+  }
+
+  const updateData: UpdatePlaceBody = {};
+  if (req.body.lat) updateData.lat = parseFloat(req.body.lat);
+  if (req.body.lng) updateData.lng = parseFloat(req.body.lng);
+  if (req.body.price) updateData.price = parseFloat(req.body.price);
+  if (picturePath) updateData.picture_path = picturePath;
+
   const { data, error } = await supabase
     .from("dd_places")
-    .update({
-      lat: newPlace.lat,
-      lng: newPlace.lng,
-      price: newPlace.price,
-    })
+    .update(updateData)
     .eq("id", id);
+  const path = supabase.storage.from("dd").getPublicUrl(picturePath);
+  console.log("public path", path);
 
   if (error) {
     console.error(error);
