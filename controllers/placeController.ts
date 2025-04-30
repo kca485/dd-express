@@ -46,6 +46,7 @@ export async function createPlace(req: Request, res: Response) {
     lat: parseFloat(newPlace.lat),
     lng: parseFloat(newPlace.lng),
     price: parseFloat(newPlace.price),
+    name: newPlace.name,
     picture_path: picturePath,
   });
 
@@ -64,6 +65,7 @@ interface UpdatePlaceBody {
   lat?: number;
   lng?: number;
   price?: number;
+  name?: number;
   picture_path?: string;
 }
 export async function updatePlace(req: Request, res: Response) {
@@ -96,14 +98,13 @@ export async function updatePlace(req: Request, res: Response) {
   if (req.body.lat) updateData.lat = parseFloat(req.body.lat);
   if (req.body.lng) updateData.lng = parseFloat(req.body.lng);
   if (req.body.price) updateData.price = parseFloat(req.body.price);
+  if (req.body.name) updateData.name = req.body.name;
   if (picturePath) updateData.picture_path = picturePath;
 
   const { data, error } = await supabase
     .from("dd_places")
     .update(updateData)
     .eq("id", id);
-  const path = supabase.storage.from("dd").getPublicUrl(picturePath);
-  console.log("public path", path);
 
   if (error) {
     console.error(error);
