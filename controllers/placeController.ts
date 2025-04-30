@@ -74,7 +74,7 @@ export async function updatePlace(req: Request, res: Response) {
 
   const picture = req.file;
   let picturePath = "";
-  if (picture) {
+  if (picture?.buffer.length) {
     const ext = picture?.originalname.split(".").pop();
 
     const filename = `${id}-${String(Date.now())}.${ext}`;
